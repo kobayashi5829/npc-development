@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -27,13 +28,6 @@ namespace WBC
             public Choice[] choices;
         }
 
-        private async void Start()
-        {
-            await Task.Delay(1000);
-            string response = await GetLLMResponse();
-            Debug.Log(response);
-        }
-
         /// <summary>
         /// 生成AIからの回答を得る
         /// </summary>
@@ -55,15 +49,15 @@ namespace WBC
             string jsonData = JsonConvert.SerializeObject(payload);
 
             UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
-            byte[] bodyRow = new UTF8Encoding().GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(bodyRow);
+            byte[] bodyRaw = new UTF8Encoding().GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
             await request.SendWebRequest();
 
-            string response = "やあ。次は何の講義？";
+            string response = null;
             if (request.result == UnityWebRequest.Result.Success)
             {
                 string jsonResponse = request.downloadHandler.text;
@@ -72,14 +66,67 @@ namespace WBC
                 {
                     response = jsonResponseData.choices[0].message.content;
                 }
-            }
-            else
-            {
-                Debug.Log(request.error);
-                Debug.Log(request.result);
+                else
+                {
+                    response = "やあ。次は何の講義？";
+                }
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// テキストを音声データに変換する
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public async Task<byte[]> GetTTSResponse(string text)
+        {
+            string apiKey = "";
+            string apiUrl = "https://api.openai.com/v1/audio/speech";
+
+            var payload = new
+            {
+                model = "gpt-4o-mini-tts",
+                voice = "alloy",
+                input = text,
+                format = "mp3"
+            };
+            string jsonData = JsonConvert.SerializeObject(payload);
+
+            UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
+            byte[] bodyRaw = new UTF8Encoding().GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+
+            await request.SendWebRequest();
+
+            byte[] response = null;
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                response = request.downloadHandler.data;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// 音声ファイルを取得
+        /// </summary>
+        /// <param name="audioData"></param>
+        /// <returns></returns>
+        public async Task<AudioClip> GetAudioClip(byte[] audioData)
+        {
+            string tempPath = Path.Combine(Application.temporaryCachePath, "temp_tts.mp3");
+            File.WriteAllBytes(tempPath, audioData);
+
+            UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(tempPath, AudioType.MPEG);
+            await request.SendWebRequest();
+
+            AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
+            return clip;
         }
     }
 }
