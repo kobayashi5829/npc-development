@@ -9,19 +9,22 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private InputActionReference _turn;
     [SerializeField] private float _speed = 1f;
     [SerializeField] private float _mouseSensitive = 1f;
-    [SerializeField] private int _micNo = 2;
+    [SerializeField] private int _micNo = 0;
 
     private void Awake()
     {
         _move.action.Enable();
         _turn.action.Enable();
 
+        foreach (var device in Microphone.devices)
+        {
+            Debug.Log("Detected Microphone: " + device);
+        }
+
         string micName = Microphone.devices[_micNo];
         _audioSource.clip = Microphone.Start(micName, true, 10, 44100);
-        while (!(Microphone.GetPosition(micName) > 0))
-        {
-
-        }
+        while (!(Microphone.GetPosition(micName) > 0)) { }
+        _audioSource.Play();
     }
 
     private void Update()

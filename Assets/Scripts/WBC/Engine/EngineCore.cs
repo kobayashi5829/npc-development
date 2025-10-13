@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace WBC
+namespace WBC.Engine
 {
     public class EngineCore : MonoBehaviour
     {

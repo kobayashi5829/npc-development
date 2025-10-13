@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 
-namespace WBC
+namespace WBC.Engine
 {
-    public class ConversationEngine : EngineCore
+    public class TalkEngine : EngineCore
     {
         [System.Serializable]
         public class JsonResponseData
@@ -32,6 +32,11 @@ namespace WBC
         {
             base.Scheduled();
             Debug.Log("conversation");
+        }
+
+        private void ListenFromThePlayer()
+        {
+
         }
 
         /// <summary>
