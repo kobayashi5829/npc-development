@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace WBC
 {
-    public class Conversation : MonoBehaviour
+    public class ConversationEngine : EngineCore
     {
         [System.Serializable]
         public class JsonResponseData
@@ -28,11 +28,17 @@ namespace WBC
             public Choice[] choices;
         }
 
+        public override void Scheduled()
+        {
+            base.Scheduled();
+            Debug.Log("conversation");
+        }
+
         /// <summary>
         /// ê∂ê¨AIÇ©ÇÁÇÃâÒìöÇìæÇÈ
         /// </summary>
         /// <returns></returns>
-        public async Task<string> GetLLMResponse()
+        private async Task<string> GetLLMResponse()
         {
             string apiKey = "";
             string apiUrl = "https://api.openai.com/v1/chat/completions";
@@ -80,7 +86,7 @@ namespace WBC
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public async Task<byte[]> GetTTSResponse(string text)
+        private async Task<byte[]> GetTTSResponse(string text)
         {
             string apiKey = "";
             string apiUrl = "https://api.openai.com/v1/audio/speech";
@@ -117,9 +123,9 @@ namespace WBC
         /// </summary>
         /// <param name="audioData"></param>
         /// <returns></returns>
-        public async Task<AudioClip> GetAudioClip(byte[] audioData)
+        private async Task<AudioClip> GetAudioClip(byte[] audioData)
         {
-            string tempPath = Path.Combine(Application.temporaryCachePath, "temp_tts.mp3");
+            string tempPath = Path.Combine(Application.temporaryCachePath, "temp.mp3");
             File.WriteAllBytes(tempPath, audioData);
 
             UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(tempPath, AudioType.MPEG);
