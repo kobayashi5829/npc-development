@@ -2,8 +2,17 @@ using UnityEngine;
 
 namespace WBC.Engine
 {
+    [RequireComponent(typeof(Controller))]
     public class EngineCore : MonoBehaviour
     {
-         public virtual void Scheduled() { }
+        protected int id;
+
+        public virtual void Started()
+        {
+            Controller controller = GetComponent<Controller>();
+            id = controller.Id(); //IDを各機能で使えるように保持しておく
+        }
+
+         public virtual void Updated() { }
     }
 }

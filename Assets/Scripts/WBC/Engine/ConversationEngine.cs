@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace WBC.Engine
 {
-    public class TalkEngine : EngineCore
+    public class ConversationEngine : EngineCore
     {
         [System.Serializable]
         public class JsonResponseData
@@ -28,15 +28,45 @@ namespace WBC.Engine
             public Choice[] choices;
         }
 
-        public override void Scheduled()
+        public class ConversationSession
         {
-            base.Scheduled();
-            Debug.Log("conversation");
+            public ConversationSession()
+            {
+
+            }
         }
 
-        private void ListenFromThePlayer()
-        {
+        public ConversationSession session;
+        public ConversationEngine host;
 
+        public override void Started()
+        {
+            base.Started();
+        }
+
+        public override void Updated()
+        {
+            base.Updated();
+        }
+
+        /// <summary>
+        /// 対話の受付
+        /// </summary>
+        /// <param name="id"></param>
+        public void SYN(int id)
+        {
+            if (session != null)
+            {
+                Debug.Log("add session");
+            }
+            else if (host != null)
+            {
+                Debug.Log("other host add session");
+            }
+            else if (base.id > id) //IDが大きいNPCにセッション権限を与える（Player=-1は除外）
+            {
+                Debug.Log("create session");
+            }
         }
 
         /// <summary>
