@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _speed = 1f;
     [SerializeField] private float _mouseSensitive = 1f;
 
-    private void Awake()
+    private void Start()
     {
         _move.action.Enable();
         _turn.action.Enable();

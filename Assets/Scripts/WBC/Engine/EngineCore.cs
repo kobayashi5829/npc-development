@@ -5,7 +5,7 @@ namespace WBC.Engine
     [RequireComponent(typeof(Controller))]
     public class EngineCore : MonoBehaviour
     {
-        protected int id;
+        protected int id { private set; get; }
 
         public virtual void Started()
         {

@@ -36,8 +36,8 @@ namespace WBC.Engine
             }
         }
 
-        public ConversationSession session;
-        public ConversationEngine host;
+        public ConversationSession session { private set; get; }
+        public ConversationEngine host { private set; get; }
 
         public override void Started()
         {
@@ -65,7 +65,7 @@ namespace WBC.Engine
             }
             else if (base.id > id) //IDが大きいNPCにセッション権限を与える（Player=-1は除外）
             {
-                Debug.Log("create session");
+                session = new ConversationSession();
             }
         }
 
