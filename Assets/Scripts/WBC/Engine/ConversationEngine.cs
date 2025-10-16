@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using Unity.VisualScripting;
 
 namespace WBC.Engine
 {
+    [RequireComponent(typeof(AudioSource))]
     public class ConversationEngine : EngineCore
     {
         [System.Serializable]
@@ -30,12 +32,75 @@ namespace WBC.Engine
 
         public class ConversationSession
         {
-            public ConversationSession()
+            private enum SessionState
             {
+                Start,
+                Awkward, //気まずい
+                DisbandJudge, //解散の判定
+                End,
+            }
 
+            private SessionState sessionState;
+            private float awkwardTime = 0f; //気まずい時間の上限
+            private float awkwardTimer = 0f; //気まずい時間
+            private float disbandProvAcc = 0f; //解散確率増加
+            private float disbandProv = 0f; //解散確率
+
+            public ConversationSession(float awkwardTime, float disbandProvAcc)
+            {
+                //データの取得
+                this.awkwardTime = awkwardTime;
+                this.disbandProvAcc = disbandProvAcc;
+
+                sessionState = SessionState.Start; //初期フラグの設定
+            }
+
+            public void Updated()
+            {
+                //状態マシン
+                switch (sessionState)
+                {
+                    case SessionState.Start:
+                        sessionState = SessionState.Awkward;
+                        break;
+                    case SessionState.Awkward:
+                        if (Awkward() == true)
+                            sessionState = SessionState.DisbandJudge;
+                        break;
+                    case SessionState.DisbandJudge:
+                        if (DisbandJudge() == true) { sessionState = SessionState.End; }
+                        else { sessionState = SessionState.End; }
+                        break;
+                    case SessionState.End:
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// 気まずい時間の計測
+            /// </summary>
+            /// <returns></returns>
+            private bool Awkward()
+            {
+                awkwardTimer += Time.deltaTime;
+
+                if (awkwardTimer > awkwardTime) { return true; }
+                else { return false; }
+            }
+
+            /// <summary>
+            /// 解散の決定
+            /// </summary>
+            /// <returns></returns>
+            private bool DisbandJudge()
+            {
+                disbandProv += disbandProvAcc;
+                if (Random.value < disbandProv) { return true; }
+                else { return false; }
             }
         }
 
+        [SerializeField] private AudioSource _audioSource;
         public ConversationSession session { private set; get; }
         public ConversationEngine host { private set; get; }
 
@@ -47,6 +112,7 @@ namespace WBC.Engine
         public override void Updated()
         {
             base.Updated();
+            if (session != null) session.Updated();
         }
 
         /// <summary>
@@ -57,15 +123,19 @@ namespace WBC.Engine
         {
             if (session != null)
             {
-                Debug.Log("add session");
+                //Debug.Log("added " + id + " conversation session");
             }
             else if (host != null)
             {
-                Debug.Log("other host add session");
+                //Debug.Log("other host add conversation session");
             }
             else if (base.id > id) //IDが大きいNPCにセッション権限を与える（Player=-1は除外）
             {
-                session = new ConversationSession();
+                //Debug.Log("create conversation session");
+                session = new ConversationSession(
+                    1f, //気まずい時間
+                    0.1f //解散確率増加
+                    );
             }
         }
 
@@ -84,7 +154,7 @@ namespace WBC.Engine
                 messages = new object[]
                 {
                     new { role = "system", content = "あなたは徳島大学の学生です。日常会話で返答してください。" },
-                    new { role = "user", content = "話しかけました。" }
+                    new { role = "user", content = "調子はどうだい？" }
                 }
             };
             string jsonData = JsonConvert.SerializeObject(payload);

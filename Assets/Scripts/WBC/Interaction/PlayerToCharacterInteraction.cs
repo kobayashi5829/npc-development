@@ -85,7 +85,7 @@ namespace WBC.Interaction
             {
                 if (recordedSamples.Count == 0) return null;
 
-                AudioClip clip = AudioClip.Create("record", recordedSamples.Count, 1, sampleRate, false);
+                AudioClip clip = AudioClip.Create("player_voice", recordedSamples.Count, 1, sampleRate, false);
                 clip.SetData(recordedSamples.ToArray(), 0);
 
                 return clip;
@@ -93,8 +93,10 @@ namespace WBC.Interaction
         }
 
         private const int PLAYER_ID = -1;
-        [SerializeField] private AudioSource _audioSource;
+        [Header("Use Module")]
         [SerializeField] private bool _talking = true;
+        [Header("Talking Settings")]
+        [SerializeField] private AudioSource _audioSource;
         [SerializeField] private int _sampleMicRate = 16000; //音声認識のサンプルレート
         [SerializeField] private float _threshold = 0.01f; //音量判定の閾値
         [SerializeField] private float _silenceDuration = 0f; //話している最中の無音時間
@@ -116,11 +118,6 @@ namespace WBC.Interaction
             if (_talking == true)
             {
                 AudioClip clip = _voiceRecorder.Recording();
-                if (clip != null)
-                {
-                    _audioSource.clip = clip;
-                    _audioSource.Play();
-                }
             }
         }
 
@@ -129,7 +126,7 @@ namespace WBC.Interaction
             if (other.TryGetComponent<ConversationEngine>(out var engine))
             {
                 //_conversationList.Add(engine);
-                //engine.SYN(PLAYER_ID);
+                engine.SYN(PLAYER_ID);
             }
         }
 
