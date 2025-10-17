@@ -17,9 +17,7 @@ namespace WBC.Engine
                 return;
 
             foreach (EngineCore engine in _engines)
-            {
                 engine.Started();
-            }
         }
 
         private void Update()
@@ -28,9 +26,7 @@ namespace WBC.Engine
                 return;
 
             foreach (EngineCore engine in _engines)
-            {
                 engine.Updated();
-            }
         }
     }
 }
