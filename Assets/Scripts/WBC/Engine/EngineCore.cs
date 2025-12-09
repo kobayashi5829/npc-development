@@ -10,7 +10,7 @@ namespace WBC.Engine
         public virtual void Started()
         {
             Controller controller = GetComponent<Controller>();
-            id = controller.Id(); //IDを各機能で使えるように保持しておく
+            id = controller.Id(); //IDを各機能で使えるように保存しておく。
         }
 
          public virtual void Updated() { }

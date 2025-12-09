@@ -363,12 +363,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _characterController: {fileID: 596670374773188592}
-  _audioSource: {fileID: 5023337987047348151}
   _move: {fileID: 8268506421993061447, guid: b93024b641aa444429f6e7cc54b342bb, type: 3}
   _turn: {fileID: -6484240273607691234, guid: b93024b641aa444429f6e7cc54b342bb, type: 3}
   _speed: 2
   _mouseSensitive: 16
-  _micNo: 0
 --- !u!1001 &3664822263691669104
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -420,6 +418,10 @@ PrefabInstance:
     - target: {fileID: 1012996487384284603, guid: 7d58a686a02c4a8438facad85e0b44e1, type: 3}
       propertyPath: m_Name
       value: Interaction
+      objectReference: {fileID: 0}
+    - target: {fileID: 3584368985777205491, guid: 7d58a686a02c4a8438facad85e0b44e1, type: 3}
+      propertyPath: _voiceRecorder
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

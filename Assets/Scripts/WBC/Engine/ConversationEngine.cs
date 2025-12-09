@@ -1,10 +1,11 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
-using Unity.VisualScripting;
 
 namespace WBC.Engine
 {
@@ -32,32 +33,40 @@ namespace WBC.Engine
 
         public class ConversationSession
         {
+            public struct Talk
+            {
+                public string text;
+                public byte[] audioData;
+            }
+
             private enum SessionState
             {
                 Start,
-                Awkward, //‹C‚Ü‚¸‚¢
-                DisbandJudge, //‰ğU‚Ì”»’è
+                Awkward, //æ°—ã¾ãšã„
+                DisbandJudge, //è§£æ•£ã®åˆ¤å®š
                 End,
+                Conv, //ä¼šè©±çŠ¶æ…‹
             }
 
-            private SessionState sessionState;
-            private float awkwardTime = 0f; //‹C‚Ü‚¸‚¢ŠÔ‚ÌãŒÀ
-            private float awkwardTimer = 0f; //‹C‚Ü‚¸‚¢ŠÔ
-            private float disbandProvAcc = 0f; //‰ğUŠm—¦‘‰Á
-            private float disbandProv = 0f; //‰ğUŠm—¦
+            private SessionState sessionState; //ã‚»ãƒƒã‚·ãƒ§ãƒ³ã®çŠ¶æ…‹
+            private Talk[] talks; //ä¼šè©±å±¥æ­´
+            private float awkwardTime = 0f; //æ°—ã¾ãšã„æ™‚é–“ã®ä¸Šé™
+            private float awkwardTimer = 0f; //æ°—ã¾ãšã„æ™‚é–“
+            private float disbandProvAcc = 0f; //è§£æ•£ç¢ºç‡å¢—åŠ 
+            private float disbandProv = 0f; //è§£æ•£ç¢ºç‡
 
             public ConversationSession(float awkwardTime, float disbandProvAcc)
             {
-                //ƒf[ƒ^‚Ìæ“¾
+                //ãƒ‡ãƒ¼ã‚¿ã®å–å¾—
                 this.awkwardTime = awkwardTime;
                 this.disbandProvAcc = disbandProvAcc;
 
-                sessionState = SessionState.Start; //‰Šúƒtƒ‰ƒO‚Ìİ’è
+                sessionState = SessionState.Start; //åˆæœŸãƒ•ãƒ©ã‚°ã®è¨­å®š
             }
 
             public void Updated()
             {
-                //ó‘Ôƒ}ƒVƒ“
+                //çŠ¶æ…‹ãƒã‚·ãƒ³
                 switch (sessionState)
                 {
                     case SessionState.Start:
@@ -69,7 +78,10 @@ namespace WBC.Engine
                         break;
                     case SessionState.DisbandJudge:
                         if (DisbandJudge() == true) { sessionState = SessionState.End; }
-                        else { sessionState = SessionState.End; }
+                        else { sessionState = SessionState.Conv; }
+                        break;
+                    case SessionState.Conv:
+                        Debug.Log("Conversation ongoing...");
                         break;
                     case SessionState.End:
                         break;
@@ -77,19 +89,23 @@ namespace WBC.Engine
             }
 
             /// <summary>
-            /// ‹C‚Ü‚¸‚¢ŠÔ‚ÌŒv‘ª
+            /// æ°—ã¾ãšã„æ™‚é–“ã®è¨ˆæ¸¬
             /// </summary>
             /// <returns></returns>
             private bool Awkward()
             {
                 awkwardTimer += Time.deltaTime;
 
-                if (awkwardTimer > awkwardTime) { return true; }
+                if (awkwardTimer > awkwardTime)
+                {
+                    awkwardTimer = 0f;
+                    return true;
+                }
                 else { return false; }
             }
 
             /// <summary>
-            /// ‰ğU‚ÌŒˆ’è
+            /// è§£æ•£ã®æ±ºå®š
             /// </summary>
             /// <returns></returns>
             private bool DisbandJudge()
@@ -98,8 +114,36 @@ namespace WBC.Engine
                 if (Random.value < disbandProv) { return true; }
                 else { return false; }
             }
+
+            /// <summary>
+            /// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç™ºè¨€ã‚’å—ã‘å–ã‚‹
+            /// </summary>
+            /// <param name="text"></param>
+            public void ListenPlayerSpeech(string text)
+            {
+                sessionState = SessionState.Conv; //ä¼šè©±çŠ¶æ…‹ã«ç§»è¡Œ
+            }
+
+            private async Task RunTalk(int num)
+            {
+                //çµæœæ ¼ç´ç”¨
+                Talk[] results = new Talk[num];
+
+                //å®Œäº†é€šçŸ¥ç”¨
+                TaskCompletionSource<bool>[] ready = new TaskCompletionSource<bool>[num];
+                for (int i = 0; i < num; i++) { ready[i] = new TaskCompletionSource<bool>(); }
+
+                for (int i = 0; i < num; i++)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        
+                    });
+                }
+            }
         }
 
+        private const string API_KEY = "";
         [SerializeField] private AudioSource _audioSource;
         public ConversationSession session { private set; get; }
         public ConversationEngine host { private set; get; }
@@ -116,36 +160,43 @@ namespace WBC.Engine
         }
 
         /// <summary>
-        /// ‘Î˜b‚Ìó•t
+        /// å¯¾è©±ã®å—ä»˜
         /// </summary>
         /// <param name="id"></param>
-        public void SYN(int id)
+        public ConversationEngine SYN(int id)
         {
-            if (session != null)
+            if (session != null) //è‡ªåˆ†ãŒã‚»ãƒƒã‚·ãƒ§ãƒ³æ¨©é™ã‚’æŒã£ã¦ã„ã‚‹
             {
                 //Debug.Log("added " + id + " conversation session");
+                return this;
             }
-            else if (host != null)
+            else if (host != null) //ä»–NPCãŒã‚»ãƒƒã‚·ãƒ§ãƒ³æ¨©é™ã‚’æŒã£ã¦ã„ã‚‹
             {
                 //Debug.Log("other host add conversation session");
+                return host;
             }
-            else if (base.id > id) //ID‚ª‘å‚«‚¢NPC‚ÉƒZƒbƒVƒ‡ƒ“Œ ŒÀ‚ğ—^‚¦‚éiPlayer=-1‚ÍœŠOj
+            else if (base.id > id) //IDãŒå¤§ãã„NPCã«ã‚»ãƒƒã‚·ãƒ§ãƒ³æ¨©é™ã‚’ä¸ãˆã‚‹ï¼ˆPlayer=-1ã¯é™¤å¤–ï¼‰
             {
                 //Debug.Log("create conversation session");
                 session = new ConversationSession(
-                    1f, //‹C‚Ü‚¸‚¢ŠÔ
-                    0.1f //‰ğUŠm—¦‘‰Á
+                    1f, //æ°—ã¾ãšã„æ™‚é–“
+                    0.1f //è§£æ•£ç¢ºç‡å¢—åŠ 
                     );
+                return this;
+            }
+            else //ã‚»ãƒƒã‚·ãƒ§ãƒ³æ¨©é™ã‚’ä¸ãˆã‚‹
+            {
+                return null;
             }
         }
 
         /// <summary>
-        /// ¶¬AI‚©‚ç‚Ì‰ñ“š‚ğ“¾‚é
+        /// ç”ŸæˆAIã‹ã‚‰ã®å›ç­”ã‚’å¾—ã‚‹
         /// </summary>
         /// <returns></returns>
-        private async Task<string> GetLLMResponse()
+        private async Task<string> GetLLMResponse(string text)
         {
-            string apiKey = "";
+            string apiKey = API_KEY;
             string apiUrl = "https://api.openai.com/v1/chat/completions";
 
             var payload = new
@@ -153,8 +204,8 @@ namespace WBC.Engine
                 model = "gpt-4o-mini",
                 messages = new object[]
                 {
-                    new { role = "system", content = "‚ ‚È‚½‚Í“¿“‡‘åŠw‚ÌŠw¶‚Å‚·B“úí‰ï˜b‚Å•Ô“š‚µ‚Ä‚­‚¾‚³‚¢B" },
-                    new { role = "user", content = "’²q‚Í‚Ç‚¤‚¾‚¢H" }
+                    new { role = "system", content = "ã‚ãªãŸã¯å¾³å³¶å¤§å­¦ã®å­¦ç”Ÿã§ã™ã€‚" },
+                    new { role = "user", content = text }
                 }
             };
             string jsonData = JsonConvert.SerializeObject(payload);
@@ -179,7 +230,7 @@ namespace WBC.Engine
                 }
                 else
                 {
-                    response = "‚â‚ BŸ‚Í‰½‚Ìu‹`H";
+                    response = "ã‚„ã‚ã€‚æ¬¡ã¯ä½•ã®è¬›ç¾©ï¼Ÿ";
                 }
             }
 
@@ -187,13 +238,13 @@ namespace WBC.Engine
         }
 
         /// <summary>
-        /// ƒeƒLƒXƒg‚ğ‰¹ºƒf[ƒ^‚É•ÏŠ·‚·‚é
+        /// ãƒ†ã‚­ã‚¹ãƒˆã‚’éŸ³å£°ãƒ‡ãƒ¼ã‚¿ã«å¤‰æ›ã™ã‚‹
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
         private async Task<byte[]> GetTTSResponse(string text)
         {
-            string apiKey = "";
+            string apiKey = API_KEY;
             string apiUrl = "https://api.openai.com/v1/audio/speech";
 
             var payload = new
@@ -221,23 +272,6 @@ namespace WBC.Engine
             }
 
             return response;
-        }
-
-        /// <summary>
-        /// ‰¹ºƒtƒ@ƒCƒ‹‚ğæ“¾
-        /// </summary>
-        /// <param name="audioData"></param>
-        /// <returns></returns>
-        private async Task<AudioClip> GetAudioClip(byte[] audioData)
-        {
-            string tempPath = Path.Combine(Application.temporaryCachePath, "temp.mp3");
-            File.WriteAllBytes(tempPath, audioData);
-
-            UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(tempPath, AudioType.MPEG);
-            await request.SendWebRequest();
-
-            AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
-            return clip;
         }
     }
 }
